@@ -146,8 +146,14 @@ async function handle (event) {
   const data = await get([lng, lat]);
   const feature = data.features[0];
 
+  const type = feature.properties.description.toLowerCase();
+
+  const response = await fetch(`https://inspire.ec.europa.eu/codelist/LithologyValue/${type}/${type}.sv.json`);
+  const typeData = await response.json();
+
   const responseData = {
-    [feature.properties.geologicUnitType]: feature.properties.description.toLowerCase()
+    type: typeData.value.label.text,
+    description: typeData.value.definition.text
   };
 
   const prettyPrint = event.request.headers.get('origin') === null;
