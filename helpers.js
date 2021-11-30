@@ -36,7 +36,7 @@ export function geodeticToGrid(latitude, longitude) {
         B * Math.pow(Math.sin(phi), 2) +
         C * Math.pow(Math.sin(phi), 4) +
         D * Math.pow(Math.sin(phi), 6));
-        const deltaLambda = lambda - lambdaZero;
+    const deltaLambda = lambda - lambdaZero;
     const xiPrim = Math.atan(Math.tan(phiStar) / Math.cos(deltaLambda));
     const etaPrim = Math.atanh(Math.cos(phiStar) * Math.sin(deltaLambda));
     const x = scale * aRoof * (xiPrim +
@@ -71,4 +71,10 @@ export function offset([long, lat], dn = 10, de = 10) {
     const lonO = long + dLon * 180 / Math.PI;
 
     return [lonO, latO];
+}
+
+export function errorResponse(msg) {
+    return new Response(msg, {
+        status: 400,
+    });
 }

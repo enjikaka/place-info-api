@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
-import { geodeticToGrid, offset } from './helpers.js';
+import { errorResponse, geodeticToGrid, offset } from './helpers.js';
 
 /**
  * @param {number[]} coord
@@ -51,11 +51,11 @@ async function get([lng, lat]) {
   return response.json();
 }
 
-function validateSearchQuery (url) {
+function validateSearchQuery(url) {
   const lat = parseFloat(url.searchParams.get('lat'));
 
   if (Number.isNaN(lat)) {
-   throw new ReferenceError('You did not provide a latitude value in the "lat" search parameter.');
+    throw new ReferenceError('You did not provide a latitude value in the "lat" search parameter.');
   }
 
   const lng = parseFloat(url.searchParams.get('lng'));
@@ -67,8 +67,8 @@ function validateSearchQuery (url) {
   return { lng, lat };
 }
 
-async function handle (event) {
-  const url = new URL(event.request.url);
+async function handle(request) {
+  const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
 
   const data = await get([lng, lat]);
@@ -85,7 +85,7 @@ async function handle (event) {
     description: typeData.value.definition.text
   };
 
-  const prettyPrint = event.request.headers.get('origin') === null;
+  const prettyPrint = request.headers.get('origin') === null;
 
   return new Response(JSON.stringify(responseData, null, prettyPrint ? 4 : undefined), {
     status: 200,
@@ -95,40 +95,19 @@ async function handle (event) {
   });
 }
 
-function errorResponse (msg) {
-  return new Response(msg, {
-    status: 400,
-  });
-}
 
-function nextHour () {
-  const hh = new Date().getUTCHours();
 
-  return hh < 24 ? hh + 1 : 0;
-}
-
-async function handleRequest(request) {
+serve(async reqeust => {
   let response;
 
   try {
-      response = await handle(event);
+    response = await handle(request);
 
-      // TODO: Set better cache headers when I have figured out how often CAMS updates these responses...
-      const d = new Date();
-
-      d.setUTCHours(nextHour());
-      d.setUTCMinutes(0);
-      d.setUTCSeconds(0);
-
-      response.headers.set('Expires', d.toUTCString());
-
-      response.headers.set('Access-Control-Allow-Origin', '*');
-      response.headers.set('Access-Control-Request-Method', 'GET');
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Request-Method', 'GET');
   } catch (e) {
-      response = errorResponse(e.message);
+    response = errorResponse(e.message);
   }
 
   return response;
-}
-
-serve(handleRequest);
+});

@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
-import { geodeticToGrid, offset } from './helpers.js';
+import { errorResponse, geodeticToGrid, offset } from './helpers.js';
 
 /**
  * @param {number[]} coord
@@ -67,14 +67,12 @@ function validateSearchQuery(url) {
     return { lng, lat };
 }
 
-async function handle(event) {
-    const url = new URL(event.request.url);
+async function handle(request) {
+    const url = new URL(request.url);
     const { lng, lat } = validateSearchQuery(url);
 
     const data = await get([lng, lat]);
     const feature = data.features[0];
-
-
 
     return new Response(JSON.stringify({ data, feature }, null, prettyPrint ? 4 : undefined), {
         status: 200,
@@ -90,26 +88,11 @@ function errorResponse(msg) {
     });
 }
 
-function nextHour() {
-    const hh = new Date().getUTCHours();
-
-    return hh < 24 ? hh + 1 : 0;
-}
-
-async function handleRequest(request) {
+serve(async reqeust => {
     let response;
 
     try {
-        response = await handle(event);
-
-        // TODO: Set better cache headers when I have figured out how often CAMS updates these responses...
-        const d = new Date();
-
-        d.setUTCHours(nextHour());
-        d.setUTCMinutes(0);
-        d.setUTCSeconds(0);
-
-        response.headers.set('Expires', d.toUTCString());
+        response = await handle(request);
 
         response.headers.set('Access-Control-Allow-Origin', '*');
         response.headers.set('Access-Control-Request-Method', 'GET');
@@ -118,6 +101,4 @@ async function handleRequest(request) {
     }
 
     return response;
-}
-
-serve(handleRequest);
+});
