@@ -94,3 +94,5 @@ export function validateSearchQuery(url) {
 
     return { lng, lat };
 }
+
+export const prettyPrint = request => request.headers.get('origin') === null;

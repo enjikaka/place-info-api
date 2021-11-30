@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
-import { validateSearchQuery, errorResponse, geodeticToGrid, offset } from './helpers.js';
+import { prettyPrint, validateSearchQuery, errorResponse, geodeticToGrid, offset } from './helpers.js';
 
 /**
  * @param {number[]} coord
@@ -60,7 +60,7 @@ async function handle(request) {
     const data = await get([lng, lat]);
     const feature = data.features[0];
 
-    return new Response(JSON.stringify({ data, feature }, null, prettyPrint ? 4 : undefined), {
+    return new Response(JSON.stringify({ data, feature }, null, prettyPrint(request) ? 4 : undefined), {
         status: 200,
         headers: new Headers({
             'content-type': 'application/json'
