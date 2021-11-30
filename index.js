@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
-import { errorResponse, geodeticToGrid, offset } from './helpers.js';
+import { validateSearchQuery, errorResponse, geodeticToGrid, offset } from './helpers.js';
 
 /**
  * @param {number[]} coord
@@ -49,22 +49,6 @@ async function get([lng, lat]) {
   }
 
   return response.json();
-}
-
-function validateSearchQuery(url) {
-  const lat = parseFloat(url.searchParams.get('lat'));
-
-  if (Number.isNaN(lat)) {
-    throw new ReferenceError('You did not provide a latitude value in the "lat" search parameter.');
-  }
-
-  const lng = parseFloat(url.searchParams.get('lng'));
-
-  if (Number.isNaN(lng)) {
-    throw new ReferenceError('You did not provide a longitude value in the "lat" search parameter.');
-  }
-
-  return { lng, lat };
 }
 
 async function handle(request) {

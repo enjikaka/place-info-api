@@ -78,3 +78,19 @@ export function errorResponse(msg) {
         status: 400,
     });
 }
+
+export function validateSearchQuery(url) {
+    const lat = parseFloat(url.searchParams.get('lat'));
+
+    if (Number.isNaN(lat)) {
+        throw new ReferenceError('You did not provide a latitude value in the "lat" search parameter.');
+    }
+
+    const lng = parseFloat(url.searchParams.get('lng'));
+
+    if (Number.isNaN(lng)) {
+        throw new ReferenceError('You did not provide a longitude value in the "lat" search parameter.');
+    }
+
+    return { lng, lat };
+}
