@@ -42,6 +42,8 @@ async function get([lng, lat]) {
     url.searchParams.set('x', x);
     url.searchParams.set('y', y);
 
+    console.log(url.toString());
+
     const response = await fetch(url.toString());
 
     if (!response.ok) {
