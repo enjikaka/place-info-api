@@ -88,7 +88,7 @@ function errorResponse(msg) {
     });
 }
 
-serve(async reqeust => {
+serve(async request => {
     let response;
 
     try {

@@ -97,7 +97,7 @@ async function handle(request) {
 
 
 
-serve(async reqeust => {
+serve(async request => {
   let response;
 
   try {
