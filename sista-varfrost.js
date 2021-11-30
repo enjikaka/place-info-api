@@ -25,7 +25,7 @@ async function get([lng, lat]) {
     const x = 50;
     const y = 50;
 
-    const layer = 'GE.GeologicUnit.SGU.SurficialGeology_25K-100K.Lithology.Polygon';
+    const layer = 'sista_varfrost';
 
     url.searchParams.set('service', 'WMS');
     url.searchParams.set('version', '1.3.0');
