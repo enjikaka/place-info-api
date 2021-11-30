@@ -25,7 +25,7 @@ async function get([lng, lat]) {
     const x = 50;
     const y = 50;
 
-    const layer = 'sista_varfrost';
+    const layer = 'klim-stat_is:sista_varfrost_yta';
 
     url.searchParams.set('service', 'WMS');
     url.searchParams.set('version', '1.3.0');
