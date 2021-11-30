@@ -82,12 +82,6 @@ async function handle(request) {
     });
 }
 
-function errorResponse(msg) {
-    return new Response(msg, {
-        status: 400,
-    });
-}
-
 serve(async request => {
     let response;
 
