@@ -10,11 +10,13 @@ import { errorResponse, NotFoundError } from './helpers.js';
  * @returns {Promise<Response>}
  */
 function route(request) {
-    if (new URLPattern('/lithologic-unit').test(request.url)) {
+    const url = new URL(request.url);
+
+    if (new URLPattern({ pathname: '/lithologic-unit' }).test(url)) {
         return lithologicUnit(request);
     }
 
-    if (new URLPattern('/sista-varfrost').test(request.url)) {
+    if (new URLPattern({ pathname: '/sista-varfrost' }).test(url)) {
         return sistaVarfrost(request);
     }
 
