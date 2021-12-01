@@ -1,23 +1,28 @@
 import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
+
+import { handler as lithologicUnit } from './lithologic-unit.js';
+import { handler as sistaVarfrost } from './sista-varfrost.js';
+
 import { errorResponse, NotFoundError } from './helpers.js';
 
 /**
  * @param {Request} request
  */
 async function route(request) {
-    const { pathname } = new URL(request.url);
-
-    try {
-        const { handler } = await import(`.${pathname}.js`);
-
-        return handler(request);
-    } catch (e) {
-        throw new NotFoundError('Not a valid path');
+    if (new URLPattern('/lithologic-unit').test(request.url)) {
+        return lithologicUnit(request);
     }
+
+    if (new URLPattern('/sista-varfrost').test(request.url)) {
+        return sistaVarfrost(request);
+    }
+
+    throw new NotFoundError('Not a valid path');
 }
 
 /**
  * @param {Request} request
+ * @returns {Promise<Response>}
  */
 async function handle(request) {
     let response;

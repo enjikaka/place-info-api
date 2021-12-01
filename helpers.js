@@ -79,6 +79,12 @@ export function offset([long, lat], dn = 10, de = 10) {
     return [lonO, latO];
 }
 
+/**
+ *
+ * @param {string} msg
+ * @param {number} status
+ * @returns
+ */
 export function errorResponse(msg, status = 400) {
     return new Response(msg, {
         status,
