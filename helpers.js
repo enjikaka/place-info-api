@@ -1,3 +1,9 @@
+export class NotFoundError extends Error {
+    constructor () {
+        super();
+    }
+}
+
 export function geodeticToGrid(latitude, longitude) {
     const axis = 6378137.0; // GRS 80.
     const flattening = 1.0 / 298.257222101; // GRS 80.
@@ -73,9 +79,9 @@ export function offset([long, lat], dn = 10, de = 10) {
     return [lonO, latO];
 }
 
-export function errorResponse(msg) {
+export function errorResponse(msg, status = 400) {
     return new Response(msg, {
-        status: 400,
+        status,
     });
 }
 
@@ -96,3 +102,53 @@ export function validateSearchQuery(url) {
 }
 
 export const prettyPrint = request => request.headers.get('origin') === null;
+
+/**
+ *
+ * @param {number[]} param0
+ * @param {{ wms: string, layer: string }} param1
+ * @returns
+ */
+export async function getWMSLayerFeatureInfo([lng, lat], { wms, layer }) {
+    const url = new URL(wms);
+
+    const rad = 50;
+
+    const [longNW, latNW] = offset([lng, lat], -(rad), -(rad));
+    const [longSE, latSE] = offset([lng, lat], rad, rad);
+
+    const [xNW, yNW] = geodeticToGrid(latNW, longNW);
+    const [xSE, ySE] = geodeticToGrid(latSE, longSE);
+
+    const bbox = [xNW, yNW, xSE, ySE].join(',');
+
+    url.searchParams.set('BBOX', bbox);
+
+    const width = 101;
+    const height = 101;
+    const x = 50;
+    const y = 50;
+
+    url.searchParams.set('service', 'WMS');
+    url.searchParams.set('version', '1.3.0');
+    url.searchParams.set('request', 'GetFeatureInfo');
+
+    url.searchParams.set('layers', layer);
+    url.searchParams.set('query_layers', layer);
+    url.searchParams.set('info_format', 'application/json');
+
+    url.searchParams.set('transparent', true);
+    url.searchParams.set('crs', 'EPSG:3006');
+    url.searchParams.set('width', width);
+    url.searchParams.set('height', height);
+    url.searchParams.set('x', x);
+    url.searchParams.set('y', y);
+
+    const response = await fetch(url.toString());
+
+    if (!response.ok) {
+        throw new Error('Could not fetch data');
+    }
+
+    return response.json();
+}

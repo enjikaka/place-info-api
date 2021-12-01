@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
+import { errorResponse, NotFoundError } from './helpers.js';
 
 /**
- * @param {Request} request 
+ * @param {Request} request
  */
 async function route(request) {
     const { pathname } = new URL(request.url);
@@ -11,12 +12,12 @@ async function route(request) {
 
         return handler(request);
     } catch (e) {
-        throw new Error('Not a valid path');
+        throw new NotFoundError('Not a valid path');
     }
 }
 
 /**
- * @param {Request} request 
+ * @param {Request} request
  */
 async function handle(request) {
     let response;
@@ -27,7 +28,9 @@ async function handle(request) {
         response.headers.set('Access-Control-Allow-Origin', '*');
         response.headers.set('Access-Control-Request-Method', 'GET');
     } catch (e) {
-        response = errorResponse(e.message);
+        const status = e instanceof NotFoundError ? 404 : 400;
+
+        response = errorResponse(e.message, status);
     }
 
     return response;
