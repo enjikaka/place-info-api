@@ -7,8 +7,9 @@ import { errorResponse, NotFoundError } from './helpers.js';
 
 /**
  * @param {Request} request
+ * @returns {Promise<Response>}
  */
-async function route(request) {
+function route(request) {
     if (new URLPattern('/lithologic-unit').test(request.url)) {
         return lithologicUnit(request);
     }
