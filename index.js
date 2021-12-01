@@ -1,95 +1,36 @@
 import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
-import { prettyPrint, validateSearchQuery, errorResponse, geodeticToGrid, offset } from './helpers.js';
 
 /**
- * @param {number[]} coord
- * @param {AthmosphereType} type
+ * @param {Request} request 
  */
-async function get([lng, lat]) {
-  const url = new URL('https://maps3.sgu.se/geoserver/inspire/ows');
+async function route(request) {
+    const { pathname } = new URL(request.url);
 
-  const rad = 50;
+    try {
+        const { handler } = await import(`.${pathname}.js`);
 
-  const [longNW, latNW] = offset([lng, lat], -(rad), -(rad));
-  const [longSE, latSE] = offset([lng, lat], rad, rad);
-
-  const [xNW, yNW] = geodeticToGrid(latNW, longNW);
-  const [xSE, ySE] = geodeticToGrid(latSE, longSE);
-
-  const bbox = [xNW, yNW, xSE, ySE].join(',');
-
-  url.searchParams.set('BBOX', bbox);
-
-  const width = 101;
-  const height = 101;
-  const x = 50;
-  const y = 50;
-
-  const layer = 'GE.GeologicUnit.SGU.SurficialGeology_25K-100K.Lithology.Polygon';
-
-  url.searchParams.set('service', 'WMS');
-  url.searchParams.set('version', '1.3.0');
-  url.searchParams.set('request', 'GetFeatureInfo');
-
-  url.searchParams.set('layers', layer);
-  url.searchParams.set('query_layers', layer);
-  url.searchParams.set('info_format', 'application/json');
-
-  url.searchParams.set('transparent', true);
-  url.searchParams.set('crs', 'EPSG:3006');
-  url.searchParams.set('width', width);
-  url.searchParams.set('height', height);
-  url.searchParams.set('x', x);
-  url.searchParams.set('y', y);
-
-  const response = await fetch(url.toString());
-
-  if (!response.ok) {
-    throw new Error('Could not fetch data');
-  }
-
-  return response.json();
+        return handler(request);
+    } catch (e) {
+        throw new Error('Not a valid path');
+    }
 }
 
+/**
+ * @param {Request} request 
+ */
 async function handle(request) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
+    let response;
 
-  const data = await get([lng, lat]);
-  const feature = data.features[0];
+    try {
+        response = await route(request);
 
-  const lithologyURI = feature.properties.representativeLithology_uri || feature.properties.representative_lithology_uri;
-  const lithologySlug = lithologyURI.split('/').pop();
+        response.headers.set('Access-Control-Allow-Origin', '*');
+        response.headers.set('Access-Control-Request-Method', 'GET');
+    } catch (e) {
+        response = errorResponse(e.message);
+    }
 
-  const response = await fetch(`https://inspire.ec.europa.eu/codelist/LithologyValue/${lithologySlug}/${lithologySlug}.sv.json`);
-  const typeData = await response.json();
-
-  const responseData = {
-    type: typeData.value.label.text,
-    description: typeData.value.definition.text
-  };
-
-  return new Response(JSON.stringify(responseData, null, prettyPrint(request) ? 4 : undefined), {
-    status: 200,
-    headers: new Headers({
-      'content-type': 'application/json'
-    })
-  });
+    return response;
 }
 
-
-
-serve(async request => {
-  let response;
-
-  try {
-    response = await handle(request);
-
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('Access-Control-Request-Method', 'GET');
-  } catch (e) {
-    response = errorResponse(e.message);
-  }
-
-  return response;
-});
+serve(handle);
