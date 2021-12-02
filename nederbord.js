@@ -34,7 +34,8 @@ export async function handler (request) {
     return new Response(body, {
         status: 200,
         headers: new Headers({
-            'content-type': 'application/json'
+            'content-type': 'application/json',
+            'last-modified': new Date('2020-10-26').toGMTString()
         })
     });
 }
