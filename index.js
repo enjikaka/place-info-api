@@ -9,10 +9,10 @@ import { errorResponse, NotFoundError } from './helpers.js';
 
 /** @type {Map<String, Function<Promise<Response>>>} */
 const routes = new Map([
-    ['/lithologic-unit', lithologicUnit],
-    ['/sista-varfrost', sistaVarfrost],
-    ['/forsta-hostfrost', forstaHostfrost],
-    ['/nederbord', nederbord]
+  ['/lithologic-unit', lithologicUnit],
+  ['/sista-varfrost', sistaVarfrost],
+  ['/forsta-hostfrost', forstaHostfrost],
+  ['/nederbord', nederbord]
 ]);
 
 /**
@@ -20,15 +20,15 @@ const routes = new Map([
  * @returns {Promise<Response>}
  */
 function router(request) {
-    const url = new URL(request.url);
+  const url = new URL(request.url);
 
-    for (const [pathname, handler] of routes) {
-        if (new URLPattern({ pathname }).test(url)) {
-            return handler(request);
-        }
+  for (const [pathname, handler] of routes) {
+    if (new URLPattern({ pathname }).test(url)) {
+      return handler(request);
     }
+  }
 
-    throw new NotFoundError('Not a valid path');
+  throw new NotFoundError('Not a valid path');
 }
 
 /**
@@ -36,20 +36,20 @@ function router(request) {
  * @returns {Promise<Response>}
  */
 async function handle(request) {
-    let response;
+  let response;
 
-    try {
-        response = await router(request);
+  try {
+    response = await router(request);
 
-        response.headers.set('Access-Control-Allow-Origin', '*');
-        response.headers.set('Access-Control-Request-Method', 'GET');
-    } catch (e) {
-        const status = e instanceof NotFoundError ? 404 : 400;
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Request-Method', 'GET');
+  } catch (e) {
+    const status = e instanceof NotFoundError ? 404 : 400;
 
-        response = errorResponse(e.message, status);
-    }
+    response = errorResponse(e.message, status);
+  }
 
-    return response;
+  return response;
 }
 
 serve(handle);
