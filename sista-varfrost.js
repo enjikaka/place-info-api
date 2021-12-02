@@ -10,49 +10,31 @@ export async function handler (request) {
     });
     const symbol = data.features[0].properties['SYMBOL'];
 
-    let range;
+    let value;
 
     switch (symbol) {
         case 1:
-            range = {
-                from: '--04-01',
-                to: '--04-15'
-            };
+            value = '--04-01/--04-15';
             break;
         case 2:
-            range = {
-                from: '--04-15',
-                to: '--05-01'
-            };
+            value = '--04-15/--05-01';
             break;
         case 3:
-            range = {
-                from: '--05-01',
-                to: '--05-15'
-            };
+            value = '--05-01/--05-15';
             break;
         case 4:
-            range = {
-                from: '--05-15',
-                to: '--06-01'
-            };
+            value = '--05-15/--06-01';
             break;
         case 5:
-            range = {
-                from: '--06-01',
-                to: '--06-15'
-            };
+            value = '--06-01/--06-15';
             break;
         case 6:
         default:
-            range = {
-                from: '--06-15',
-                to: null
-            };
+            value = '--06-15';
             break;
     }
 
-    return new Response(JSON.stringify({ range }, null, prettyPrint(request) ? 4 : undefined), {
+    return new Response(JSON.stringify({ value }, null, prettyPrint(request) ? 4 : undefined), {
         status: 200,
         headers: new Headers({
             'content-type': 'application/json'
