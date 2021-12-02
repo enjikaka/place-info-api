@@ -6,7 +6,7 @@ export async function handler (request) {
 
     const data = await getWMSLayerFeatureInfo([lng, lat], {
         wms: 'https://opendata-view.smhi.se/klim-stat_is/forsta_hostfrost/wms',
-        layer: 'klim-stat_is:forsta_hostfrost_yta'
+        layers: ['klim-stat_is:forsta_hostfrost_yta']
     });
 
     const symbol = data.features[0].properties['SYMBOL'];

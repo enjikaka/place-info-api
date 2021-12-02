@@ -112,10 +112,10 @@ export const prettyPrint = request => request.headers.get('origin') === null;
 /**
  *
  * @param {number[]} param0
- * @param {{ wms: string, layer: string }} param1
+ * @param {{ wms: string, layer: string[] }} param1
  * @returns
  */
-export async function getWMSLayerFeatureInfo([lng, lat], { wms, layer }) {
+export async function getWMSLayerFeatureInfo([lng, lat], { wms, layers }) {
     const url = new URL(wms);
 
     const rad = 50;
@@ -139,8 +139,8 @@ export async function getWMSLayerFeatureInfo([lng, lat], { wms, layer }) {
     url.searchParams.set('version', '1.3.0');
     url.searchParams.set('request', 'GetFeatureInfo');
 
-    url.searchParams.set('layers', layer);
-    url.searchParams.set('query_layers', layer);
+    url.searchParams.set('layers', layers.join(','));
+    url.searchParams.set('query_layers', layers.join(','));
     url.searchParams.set('info_format', 'application/json');
 
     url.searchParams.set('transparent', true);

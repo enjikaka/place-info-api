@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
 import { handler as lithologicUnit } from './lithologic-unit.js';
 import { handler as sistaVarfrost } from './sista-varfrost.js';
 import { handler as forstaHostfrost } from './forsta-hostfrost.js';
+import { handler as nederbord } from './nederbord.js';
 
 import { errorResponse, NotFoundError } from './helpers.js';
 
@@ -10,7 +11,8 @@ import { errorResponse, NotFoundError } from './helpers.js';
 const routes = new Map([
     ['/lithologic-unit', lithologicUnit],
     ['/sista-varfrost', sistaVarfrost],
-    ['/forsta-hostfrost', forstaHostfrost]
+    ['/forsta-hostfrost', forstaHostfrost],
+    ['/nederbord', nederbord]
 ]);
 
 /**

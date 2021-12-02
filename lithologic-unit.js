@@ -6,7 +6,7 @@ export async function handler (request) {
 
   const data = await getWMSLayerFeatureInfo([lng, lat], {
     wms: 'https://maps3.sgu.se/geoserver/inspire/ows',
-    layer: 'GE.GeologicUnit.SGU.SurficialGeology_25K-100K.Lithology.Polygon'
+    layers: ['GE.GeologicUnit.SGU.SurficialGeology_25K-100K.Lithology.Polygon']
   });
   const feature = data.features[0];
 
