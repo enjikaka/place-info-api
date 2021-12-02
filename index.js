@@ -2,22 +2,28 @@ import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
 
 import { handler as lithologicUnit } from './lithologic-unit.js';
 import { handler as sistaVarfrost } from './sista-varfrost.js';
+import { handler as forstaHostfrost } from './forsta-hostfrost.js';
 
 import { errorResponse, NotFoundError } from './helpers.js';
+
+/** @type {Map<String, Function<Promise<Response>>>} */
+const routes = new Map([
+    ['/lithologic-unit', lithologicUnit],
+    ['/sista-varfrost', sistaVarfrost],
+    ['/forsta-hostfrost', forstaHostfrost]
+]);
 
 /**
  * @param {Request} request
  * @returns {Promise<Response>}
  */
-function route(request) {
+function router(request) {
     const url = new URL(request.url);
 
-    if (new URLPattern({ pathname: '/lithologic-unit' }).test(url)) {
-        return lithologicUnit(request);
-    }
-
-    if (new URLPattern({ pathname: '/sista-varfrost' }).test(url)) {
-        return sistaVarfrost(request);
+    for (const [pathname, handler] of routes) {
+        if (new URLPattern({ pathname }).test(url)) {
+            return handler(request);
+        }
     }
 
     throw new NotFoundError('Not a valid path');
@@ -31,7 +37,7 @@ async function handle(request) {
     let response;
 
     try {
-        response = await route(request);
+        response = await router(request);
 
         response.headers.set('Access-Control-Allow-Origin', '*');
         response.headers.set('Access-Control-Request-Method', 'GET');
