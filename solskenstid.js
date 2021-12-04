@@ -1,4 +1,35 @@
-import { prettyPrint, validateSearchQuery, getWMSLayerFeatureInfo } from './helpers.js';
+import { prettyPrint, validateSearchQuery, getWMSLayerLegendGraphic, getWMSLayerFeatureInfo } from './helpers.js';
+
+const shortMonthToNum = s => {
+  const shortMonth = [
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'maj',
+    'jun',
+    'jul',
+    'aug',
+    'sept',
+    'okt',
+    'nov',
+    'dec'
+  ];
+
+  const num = shortMonth.indexOf(s) + 1;
+
+  console.log(s, num < 10 ? '0' + num : num + '');
+
+  return num < 10 ? '0' + num : num + '';
+};
+
+function findValue(curr) {
+  const props = curr.featureInfo.features[0].properties;
+  const matchFor = Object.keys(props).map(key => `[${key} = '${props[key]}']`);
+  const value = curr.legendGraphic.Legend[0].rules.filter(r => matchFor.includes(r.filter))[0].title;
+
+  return value.includes(' ') ? value.split(' ')[0] : value;
+}
 
 export async function handler(request) {
   const url = new URL(request.url);
@@ -7,26 +38,32 @@ export async function handler(request) {
   const wms = 'https://opendata-view.smhi.se/klim-stat_solskenstid/wms';
   const responses = await Promise.all([
     'solskenstid',
-    'solskenstid_jan',
     'solskenstid_feb',
-    'solskenstid_mar',
     'solskenstid_apr',
-    'solskenstid_maj',
     'solskenstid_jun',
-    'solskenstid_jul',
     'solskenstid_aug',
-    'solskenstid_sep',
     'solskenstid_okt',
-    'solskenstid_nov',
     'solskenstid_dec'
-  ].map(layer => getWMSLayerFeatureInfo([lng, lat], {
-    wms,
-    layers: [layer]
-  })));
+  ].map(async layer => {
+    const fi = getWMSLayerFeatureInfo([lng, lat], {
+      wms,
+      layers: [layer]
+    });
+
+    const lg = getWMSLayerLegendGraphic({
+      wms,
+      layers: [layer]
+    });
+
+    const featureInfo = await fi;
+    const legendGraphic = await lg;
+
+    return { featureInfo, legendGraphic };
+  }));
 
   const data = responses.reduce((acc, curr, i) => ({
     ...acc,
-    [i === 0 ? 'year' : i < 10 ? '--0' + i : '--' + i]: curr.features[0].properties['INTERVALL'].split('-').map(x => x.trim()).join('-')
+    [i === 0 ? 'year' : '--' + shortMonthToNum(curr.legendGraphic.Legend[0].layerName.split('_')[1])]: findValue(curr)
   }), {});
 
   const body = JSON.stringify(data, null, prettyPrint(request) ? 4 : undefined);
