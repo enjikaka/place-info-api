@@ -4,6 +4,7 @@ import { handler as lithologicUnit } from './lithologic-unit.js';
 import { handler as sistaVarfrost } from './sista-varfrost.js';
 import { handler as forstaHostfrost } from './forsta-hostfrost.js';
 import { handler as nederbord } from './nederbord.js';
+import { handler as solskenstid } from './solskenstid.js';
 
 import { errorResponse, NotFoundError } from './helpers.js';
 
@@ -12,7 +13,8 @@ const routes = new Map([
   ['/lithologic-unit', lithologicUnit],
   ['/sista-varfrost', sistaVarfrost],
   ['/forsta-hostfrost', forstaHostfrost],
-  ['/nederbord', nederbord]
+  ['/nederbord', nederbord],
+  ['/solskenstid', solskenstid]
 ]);
 
 /**
