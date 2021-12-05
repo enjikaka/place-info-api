@@ -5,7 +5,7 @@ function fixValue(value) {
 
   const monthNumber = shortMonthToNum(monthString);
 
-  return `--${monthNumber}--${day}`;
+  return `--${monthNumber}-${day}`;
 }
 
 export async function handler(request) {

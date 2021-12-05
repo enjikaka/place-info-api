@@ -6,7 +6,7 @@ function fixValue(value) {
   const [, monthString] = value.split(' ');
   const monthNumber = shortMonthToNum(monthString);
 
-  return `--${monthNumber}--${fromDay}/--${monthNumber}--${toDay}`;
+  return `--${monthNumber}-${fromDay}/--${monthNumber}-${toDay}`;
 }
 
 export async function handler(request) {
