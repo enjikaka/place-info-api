@@ -255,6 +255,20 @@ export async function getData(coords, settings) {
   };
 }
 
+/**
+ * @param {string} data
+ * @returns
+ */
+export async function checksum(data) {
+  const te = new TextEncoder();
+  const buff = te.encode(data);
+  const hashBuffer = await crypto.subtle.digest('sha-1', buff);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  return hashHex;
+}
+
 export function findValue(curr) {
   const props = curr.featureInfo.features[0].properties;
   const matchFor = Object.keys(props).map(key => `[${key} = '${props[key]}']`);

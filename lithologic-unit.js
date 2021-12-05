@@ -1,6 +1,6 @@
-import { prettyPrint, validateSearchQuery, getWMSLayerFeatureInfo } from './helpers.js';
+import { prettyPrint, validateSearchQuery, getWMSLayerFeatureInfo, checksum } from './helpers.js';
 
-export async function handler (request) {
+export async function handler(request) {
   const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
 
@@ -21,10 +21,19 @@ export async function handler (request) {
     description: typeData.value.definition.text
   };
 
-  return new Response(JSON.stringify(responseData, null, prettyPrint(request) ? 4 : undefined), {
+  const body = JSON.stringify(responseData, null, prettyPrint(request) ? 4 : undefined);
+  const etag = await checksum(body);
+
+  if (etag === request.headers.get('if-none-match')) {
+    return new Response(null, { status: 304 });
+  }
+
+  return new Response(body, {
     status: 200,
     headers: new Headers({
-      'content-type': 'application/json'
+      'content-type': 'application/json',
+      'cache-control': 'public, max-age=3600, immutable',
+      'etag': etag
     })
   });
 }

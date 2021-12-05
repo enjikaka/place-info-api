@@ -48,6 +48,7 @@ async function handle(request) {
     response.headers.set('Access-Control-Allow-Origin', '*');
     response.headers.set('Access-Control-Request-Method', 'GET');
   } catch (e) {
+    console.error(e);
     const status = e instanceof NotFoundError ? 404 : 400;
 
     response = errorResponse(e.message, status);
