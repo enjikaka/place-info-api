@@ -22,8 +22,11 @@ export async function handler(request) {
 
   const data = responses.reduce((acc, curr, i) => ({
     ...acc,
-    [i === 0 ? 'year' : '--' + shortMonthToNum(curr.legendGraphic.Legend[0].layerName.split('_')[1])]: cleanValue(findValue(curr))
-  }), {});
+    value: {
+      ...acc.value,
+      [i === 0 ? 'year' : '--' + shortMonthToNum(curr.legendGraphic.Legend[0].layerName.split('_')[1])]: cleanValue(findValue(curr))
+    }
+  }), { unit: 'timmar', value: {} });
 
   const body = JSON.stringify(data, null, prettyPrint(request) ? 4 : undefined);
 

@@ -26,8 +26,11 @@ export async function handler(request) {
 
   const data = responses.reduce((acc, curr, i) => ({
     ...acc,
-    [i === 0 ? 'year' : i < 10 ? '--0' + i : '--' + i]: findValue(curr)
-  }), {});
+    value: {
+      ...acc.value,
+      [i === 0 ? 'year' : i < 10 ? '--0' + i : '--' + i]: findValue(curr)
+    }
+  }), { unit: 'mm', value: {} });
 
   const body = JSON.stringify(data, null, prettyPrint(request) ? 4 : undefined);
 
