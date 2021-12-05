@@ -1,40 +1,29 @@
-import { prettyPrint, validateSearchQuery, getWMSLayerFeatureInfo } from './helpers.js';
+import { prettyPrint, validateSearchQuery, getData, findValue, shortMonthToNum } from './helpers.js';
 
-export async function handler (request) {
+function fixValue(value) {
+  const [fromDay, toDay] = value.split('-').map(n => parseInt(n, 10));
+
+  const [, monthString] = value.split(' ');
+  const monthNumber = shortMonthToNum(monthString);
+
+  return `--${monthNumber}--${fromDay}/--${monthNumber}--${toDay}`;
+}
+
+export async function handler(request) {
   const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
 
-  const data = await getWMSLayerFeatureInfo([lng, lat], {
+  const data = await getData([lng, lat], {
     wms: 'https://opendata-view.smhi.se/klim-stat_is/sista_varfrost/wms',
     layers: ['klim-stat_is:sista_varfrost_yta']
   });
-  const symbol = data.features[0].properties['SYMBOL'];
 
-  let value;
+  const rawValue = findValue(data);
+  const value = fixValue(rawValue);
 
-  switch (symbol) {
-    case 1:
-      value = '--04-01/--04-15';
-      break;
-    case 2:
-      value = '--04-15/--05-01';
-      break;
-    case 3:
-      value = '--05-01/--05-15';
-      break;
-    case 4:
-      value = '--05-15/--06-01';
-      break;
-    case 5:
-      value = '--06-01/--06-15';
-      break;
-    case 6:
-    default:
-      value = '--06-15';
-      break;
-  }
+  const body = JSON.stringify({ value }, null, prettyPrint(request) ? 4 : undefined);
 
-  return new Response(JSON.stringify({ value }, null, prettyPrint(request) ? 4 : undefined), {
+  return new Response(body, {
     status: 200,
     headers: new Headers({
       'content-type': 'application/json',

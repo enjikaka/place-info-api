@@ -1,3 +1,27 @@
+/**
+ * @typedef Feature
+ * @prop {string} type
+ * @prop {string} id
+ * @prop {object} geometry
+ * @prop {string} geometry.type
+ * @prop {number[]} geometry.coordinates
+ * @prop {string} geometry_name
+ * @prop {object} properties
+ */
+
+/**
+ * @typedef WMSGetFeatureInfoResponse
+ * @prop {string} type
+ * @prop {Feature[]} features
+ * @prop {string} totalFeatures
+ * @prop {number} numberReturned
+ * @prop {string} timeStamp
+ * @prop {object} crs
+ * @prop {string} crs.type
+ * @prop {object} crs.properties
+ * @prop {string} crs.properties.name
+ */
+
 export class NotFoundError extends Error {
   constructor() {
     super();
@@ -110,9 +134,18 @@ export function validateSearchQuery(url) {
 export const prettyPrint = request => request.headers.get('origin') === null;
 
 /**
- *
- * @param {number[]} param0
- * @param {{ wms: string, layer: string[] }} param1
+ * @typedef {[number, number]} Coordinates
+ * @description longitude, latitude
+ */
+
+/**
+ * @typedef WMSSettings
+ * @prop {string} wms - Link to WMS server
+ * @prop {string[]} layers
+ */
+
+/**
+ * @param {WMSSettings} param1
  * @returns
  */
 export async function getWMSLayerLegendGraphic({ wms, layers }) {
@@ -146,10 +179,9 @@ export async function getWMSLayerLegendGraphic({ wms, layers }) {
 }
 
 /**
- *
- * @param {number[]} param0
- * @param {{ wms: string, layer: string[] }} param1
- * @returns
+ * @param {Coordinates} param0
+ * @param {WMSSettings} param1
+ * @returns {WMSGetFeatureInfoResponse}
  */
 export async function getWMSLayerFeatureInfo([lng, lat], { wms, layers }) {
   const url = new URL(wms);
@@ -192,6 +224,7 @@ export async function getWMSLayerFeatureInfo([lng, lat], { wms, layers }) {
     throw new Error('Could not fetch data');
   }
 
+  /** @type {WMSGetFeatureInfoResponse|undefined} */
   let json = undefined;
 
   try {
@@ -202,3 +235,51 @@ export async function getWMSLayerFeatureInfo([lng, lat], { wms, layers }) {
 
   return json;
 }
+
+/**
+ *
+ * @param {Coordinates} param0
+ * @param {WMSSettings} param1
+ * @returns
+ */
+export async function getData(coords, settings) {
+  const featureInfoFetch = getWMSLayerFeatureInfo(coords, settings);
+  const legendGraphicFetch = getWMSLayerLegendGraphic(settings);
+
+  const featureInfo = await featureInfoFetch;
+  const legendGraphic = await legendGraphicFetch;
+
+  return {
+    featureInfo,
+    legendGraphic
+  };
+}
+
+export function findValue(curr) {
+  const props = curr.featureInfo.features[0].properties;
+  const matchFor = Object.keys(props).map(key => `[${key} = '${props[key]}']`);
+  const value = curr.legendGraphic.Legend[0].rules.filter(r => matchFor.includes(r.filter))[0].title;
+
+  return value;
+}
+
+export const shortMonthToNum = s => {
+  const shortMonth = [
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'maj',
+    'jun',
+    'jul',
+    'aug',
+    'sept',
+    'okt',
+    'nov',
+    'dec'
+  ];
+
+  const num = shortMonth.indexOf(s) + 1;
+
+  return num < 10 ? '0' + num : num + '';
+};
