@@ -8,6 +8,20 @@ function fixValue(value) {
   return `--${fromMonth}-${fromDay}/--${toMonth}-${toDay}`;
 }
 
+async function dygnMedSnotacke(request) {
+  const url = new URL(request.url);
+  const { lng, lat } = validateSearchQuery(url);
+
+  const data = await getData([lng, lat], {
+    wms: 'https://opendata-view.smhi.se/klim-stat_sno/dygn_med_snotacke/wms',
+    layers: ['klim-stat_sno:dygn_med_snotacke_yta']
+  });
+
+  const rawValue = findValue(data);
+
+  return rawValue;
+}
+
 async function forstaDagSnotacke(request) {
   const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
@@ -39,11 +53,13 @@ async function sistaDagSnotacke(request) {
 export async function handler(request) {
   const _forstaDag = forstaDagSnotacke(request);
   const _sistaDag = sistaDagSnotacke(request);
+  const _dygn = dygnMedSnotacke(request);
 
   const forstaDag = await _forstaDag;
   const sistaDag = await _sistaDag;
+  const dygn = await _dygn;
 
-  const body = JSON.stringify({ forstaDag, sistaDag }, null, prettyPrint(request) ? 4 : undefined);
+  const body = JSON.stringify({ forstaDag, sistaDag, dygn }, null, prettyPrint(request) ? 4 : undefined);
   const etag = await checksum(body);
 
   if (etag === request.headers.get('if-none-match')) {
