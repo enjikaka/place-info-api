@@ -299,3 +299,12 @@ export const shortMonthToNum = s => {
 
   return num < 10 ? '0' + num : num + '';
 };
+
+// MMDD-MMDD -> ISO 8601 range
+export function fixValueDateRange(value) {
+  const [from, to] = value.split('-');
+  const [fromMonth, fromDay] = from.match(/.{1,2}/g);
+  const [toMonth, toDay] = to.match(/.{1,2}/g);
+
+  return `--${fromMonth}-${fromDay}/--${toMonth}-${toDay}`;
+}

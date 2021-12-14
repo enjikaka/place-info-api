@@ -1,12 +1,4 @@
-import { prettyPrint, validateSearchQuery, getData, findValue, checksum } from './helpers.js';
-
-function fixValue(value) {
-  const [from, to] = value.split('-');
-  const [fromMonth, fromDay] = from.match(/.{1,2}/g);
-  const [toMonth, toDay] = to.match(/.{1,2}/g);
-
-  return `--${fromMonth}-${fromDay}/--${toMonth}-${toDay}`;
-}
+import { prettyPrint, validateSearchQuery, getData, findValue, checksum, fixValueDateRange } from './helpers.js';
 
 async function dygnMedSnotacke(request) {
   const url = new URL(request.url);
@@ -33,7 +25,7 @@ async function forstaDagSnotacke(request) {
 
   const rawValue = findValue(data);
 
-  return fixValue(rawValue);
+  return fixValueDateRange(rawValue);
 }
 
 async function sistaDagSnotacke(request) {
@@ -47,7 +39,7 @@ async function sistaDagSnotacke(request) {
 
   const rawValue = findValue(data);
 
-  return fixValue(rawValue);
+  return fixValueDateRange(rawValue);
 }
 
 export async function handler(request) {
