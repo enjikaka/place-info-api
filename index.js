@@ -6,6 +6,7 @@ import { handler as forstaHostfrost } from './forsta-hostfrost.js';
 import { handler as nederbord } from './nederbord.js';
 import { handler as solskenstid } from './solskenstid.js';
 import { handler as vegetation } from './vegetation.js';
+import { handler as snotacke } from './snotacke.js';
 
 import { errorResponse, NotFoundError } from './helpers.js';
 
@@ -16,7 +17,8 @@ const routes = new Map([
   ['/forsta-hostfrost', forstaHostfrost],
   ['/nederbord', nederbord],
   ['/solskenstid', solskenstid],
-  ['/vegetation', vegetation]
+  ['/vegetation', vegetation],
+  ['/snotacke', snotacke]
 ]);
 
 /**

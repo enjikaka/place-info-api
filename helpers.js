@@ -164,6 +164,8 @@ export async function getWMSLayerLegendGraphic({ wms, layers }) {
   const response = await fetch(url.toString());
 
   if (!response.ok) {
+    console.log(url.toString());
+    console.log(response);
     throw new Error('Could not fetch data');
   }
 
