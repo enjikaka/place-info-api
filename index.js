@@ -7,6 +7,7 @@ import { handler as solskenstid } from './solskenstid.js';
 import { handler as vegetation } from './vegetation.js';
 import { handler as snotacke } from './snotacke.js';
 import { handler as arstidstart } from './arstidstart.js';
+import { handler as temperatur } from './temperatur.js';
 
 import { errorResponse, NotFoundError } from './helpers.js';
 
@@ -18,7 +19,8 @@ const routes = new Map([
   ['/solskenstid', solskenstid],
   ['/vegetation', vegetation],
   ['/snotacke', snotacke],
-  ['/arstidstart', arstidstart]
+  ['/arstidstart', arstidstart],
+  ['/temperatur', temperatur]
 ]);
 
 /**

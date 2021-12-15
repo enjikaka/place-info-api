@@ -272,9 +272,27 @@ export async function checksum(data) {
 }
 
 export function findValue(curr) {
-  const props = curr.featureInfo.features[0].properties;
+  const props = curr.featureInfo.features
+    .map(f => f.properties)
+    .reduce((acc, props) => ({
+      ...acc,
+      ...props
+    }), {});
   const matchFor = Object.keys(props).map(key => `[${key} = '${props[key]}']`);
-  const value = curr.legendGraphic.Legend[0].rules.filter(r => matchFor.includes(r.filter))[0].title;
+  const matches = curr.legendGraphic.Legend
+    .filter(legend => !legend.layerName.includes('_iso'))
+    .map(legend => legend.rules.filter(r => matchFor.includes(r.filter)))
+    .reduce((acc, curr) => {
+      acc.push(...curr);
+      return acc;
+    }, []);
+
+  const value = matches[0]?.title ?? 'N/A';
+
+  if (value === 'N/A') {
+    console.warn('Could not find value:');
+    console.log(JSON.stringify(curr, null, 4));
+  }
 
   return value;
 }
