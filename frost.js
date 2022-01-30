@@ -1,4 +1,4 @@
-import { prettyPrint, validateSearchQuery, getData, findValue, shortMonthToNum, checksum } from './helpers.js';
+import { cachedResponse, getMetaData, validateSearchQuery, getData, findValue, shortMonthToNum } from './helpers.js';
 
 async function getHostfrost(request) {
   function fixValue(value) {
@@ -45,6 +45,10 @@ async function getVarfrost(request) {
   return fixValue(rawValue);
 }
 
+/**
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
 export async function handler(request) {
   const _hostfrost = getHostfrost(request);
   const _varfrost = getVarfrost(request);
@@ -52,19 +56,9 @@ export async function handler(request) {
   const hostfrost = await _hostfrost;
   const varfrost = await _varfrost;
 
-  const body = JSON.stringify({ hostfrost, varfrost }, null, prettyPrint(request) ? 4 : undefined);
-  const etag = await checksum(body);
+  const data = { hostfrost, varfrost };
 
-  if (etag === request.headers.get('if-none-match')) {
-    return new Response(null, { status: 304 });
-  }
+  data.metadata = await getMetaData('https://opendata-view.smhi.se/klim-stat_is/sista_varfrost/wms');
 
-  return new Response(body, {
-    status: 200,
-    headers: new Headers({
-      'content-type': 'application/json',
-      'cache-control': 'public, max-age=3600, immutable',
-      'etag': etag
-    })
-  });
+  return cachedResponse(data, request);
 }

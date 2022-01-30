@@ -1,30 +1,25 @@
-import { prettyPrint, validateSearchQuery, getData, findValue, checksum } from './helpers.js';
+import { getMetaData, validateSearchQuery, getData, findValue, cachedResponse } from './helpers.js';
 
+/**
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
 export async function handler(request) {
   const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
 
+  const wms = 'https://opendata-view.smhi.se/klim-stat_vegatation/vegetationsperiodens_langd/wms';
   const data = await getData([lng, lat], {
-    wms: 'https://opendata-view.smhi.se/klim-stat_vegatation/vegetationsperiodens_langd/wms',
+    wms,
     layers: ['vegetationsperiodens_langd_yta']
   });
 
   const rawValue = findValue(data);
   const [value, unit] = rawValue.split(' ');
 
-  const body = JSON.stringify({ value, unit }, null, prettyPrint(request) ? 4 : undefined);
-  const etag = await checksum(body);
+  const responseData = { value, unit };
 
-  if (etag === request.headers.get('if-none-match')) {
-    return new Response(null, { status: 304 });
-  }
+  responseData.metadata = await getMetaData(wms);
 
-  return new Response(body, {
-    status: 200,
-    headers: new Headers({
-      'content-type': 'application/json',
-      'cache-control': 'public, max-age=3600, immutable',
-      'etag': etag
-    })
-  });
+  return cachedResponse(responseData, request);
 }

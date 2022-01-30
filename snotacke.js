@@ -1,4 +1,4 @@
-import { prettyPrint, validateSearchQuery, getData, findValue, checksum, fixValueDateRange } from './helpers.js';
+import { cachedResponse, validateSearchQuery, getData, findValue, getMetaData, fixValueDateRange } from './helpers.js';
 
 async function dygnMedSnotacke(request) {
   const url = new URL(request.url);
@@ -42,6 +42,10 @@ async function sistaDagSnotacke(request) {
   return fixValueDateRange(rawValue);
 }
 
+/**
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
 export async function handler(request) {
   const _forstaDag = forstaDagSnotacke(request);
   const _sistaDag = sistaDagSnotacke(request);
@@ -51,19 +55,9 @@ export async function handler(request) {
   const sistaDag = await _sistaDag;
   const dygn = await _dygn;
 
-  const body = JSON.stringify({ forstaDag, sistaDag, dygn }, null, prettyPrint(request) ? 4 : undefined);
-  const etag = await checksum(body);
+  const responseData = { forstaDag, sistaDag, dygn };
 
-  if (etag === request.headers.get('if-none-match')) {
-    return new Response(null, { status: 304 });
-  }
+  responseData.metadata = await getMetaData('https://opendata-view.smhi.se/klim-stat_sno/sista_dag_med_sno/wms');
 
-  return new Response(body, {
-    status: 200,
-    headers: new Headers({
-      'content-type': 'application/json',
-      'cache-control': 'public, max-age=3600, immutable',
-      'etag': etag
-    })
-  });
+  return cachedResponse(responseData, request);
 }

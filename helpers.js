@@ -22,6 +22,8 @@
  * @prop {string} crs.properties.name
  */
 
+import { parse } from 'https://deno.land/x/xml@2.0.4/mod.ts';
+
 export class NotFoundError extends Error {
   constructor() {
     super();
@@ -131,12 +133,69 @@ export function validateSearchQuery(url) {
   return { lng, lat };
 }
 
-export const prettyPrint = request => request.headers.get('origin') === null;
+export const prettyPrint = request => request?.headers.get('origin') === null ?? true;
 
 /**
  * @typedef {[number, number]} Coordinates
  * @description longitude, latitude
  */
+
+
+/**
+ * @typedef MetaData
+ * @prop {string} source
+ * @prop {string} description
+ * @prop {{ area: string, timePeriod: string }} extent
+ */
+
+/**
+ *
+ * @param {string} wms - URL to WMS server
+ * @returns {MetaData}
+ */
+export async function getMetaData(wms) {
+  const url = new URL(wms);
+
+  url.searchParams.set('service', 'WMS');
+  url.searchParams.set('version', '1.3.0');
+  url.searchParams.set('request', 'GetCapabilities');
+
+  const response = await fetch(url.toString());
+
+  if (!response.ok) {
+    throw new Error('Could not fetch data');
+  }
+
+  const text = await response.text();
+
+  const document = parse(text);
+  const capabilityLayer = document.WMS_Capabilities.Capability.Layer.Layer;
+
+  const layer = Array.isArray(capabilityLayer) ? capabilityLayer[0] : capabilityLayer;
+  const metaDataURL = layer.MetadataURL.OnlineResource['@xlink:href'];
+
+  const metaDataResponse = await fetch(metaDataURL);
+  const metaDataText = await metaDataResponse.text();
+  const metaDataDocument = parse(metaDataText);
+
+  const dataInfo = metaDataDocument['csw:GetRecordByIdResponse']['gmd:MD_Metadata']['gmd:identificationInfo']['gmd:MD_DataIdentification'];
+  const description = dataInfo['gmd:abstract']['gco:CharacterString'];
+  const source = dataInfo['gmd:pointOfContact']['gmd:CI_ResponsibleParty']['gmd:organisationName']['gco:CharacterString'];
+
+  const exExtent = dataInfo['gmd:extent']['gmd:EX_Extent'];
+  const area = exExtent?.['gmd:description']?.['gco:CharacterString'] ?? 'N/A';
+  const gmlTimePeriod = exExtent?.['gmd:temporalElement']?.['gmd:EX_TemporalExtent']?.['gmd:extent']?.['gml:TimePeriod'] ?? 'N/A';
+  const startTime = gmlTimePeriod['gml:beginPosition'];
+  const endTime = gmlTimePeriod['gml:endPosition'];
+  const timePeriod = `${startTime}/${endTime}`; // ISO Date range
+
+  const extent = {
+    area,
+    timePeriod
+  }
+
+  return { description, source, extent };
+}
 
 /**
  * @typedef WMSSettings
@@ -164,8 +223,6 @@ export async function getWMSLayerLegendGraphic({ wms, layers }) {
   const response = await fetch(url.toString());
 
   if (!response.ok) {
-    console.log(url.toString());
-    console.log(response);
     throw new Error('Could not fetch data');
   }
 
@@ -291,7 +348,7 @@ export function findValue(curr) {
 
   if (value === 'N/A') {
     console.warn('Could not find value:');
-    console.log(JSON.stringify(curr, null, 4));
+    // console.log(JSON.stringify(curr, null, 4));
   }
 
   return value;
@@ -325,4 +382,28 @@ export function fixValueDateRange(value) {
   const [toMonth, toDay] = to.match(/.{1,2}/g);
 
   return `--${fromMonth}-${fromDay}/--${toMonth}-${toDay}`;
+}
+
+/**
+ *
+ * @param {Object} data
+ * @param {Request} request
+ * @returns
+ */
+export async function cachedResponse(data, request) {
+  const body = JSON.stringify(data, null, prettyPrint(request) ? 4 : undefined);
+  const etag = await checksum(body);
+
+  if (request.headers && etag === request.headers.get('if-none-match')) {
+    return new Response(null, { status: 304 });
+  }
+
+  return new Response(body, {
+    status: 200,
+    headers: new Headers({
+      'content-type': 'application/json',
+      'cache-control': 'public, max-age=3600, immutable',
+      'etag': etag
+    })
+  });
 }

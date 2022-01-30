@@ -1,26 +1,72 @@
-import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.114.0/http/server.ts';
+import * as handlers from './handlers.js';
+import { errorResponse, NotFoundError, prettyPrint } from './helpers.js';
 
-import { handler as lithologicUnit } from './lithologic-unit.js';
-import { handler as frost } from './frost.js';
-import { handler as nederbord } from './nederbord.js';
-import { handler as solskenstid } from './solskenstid.js';
-import { handler as vegetation } from './vegetation.js';
-import { handler as snotacke } from './snotacke.js';
-import { handler as arstidstart } from './arstidstart.js';
-import { handler as temperatur } from './temperatur.js';
+/**
+ * Full report. Slow... do not use :)
+ *
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+async function full(request) {
+  const dataFetchers = [
+    handlers.lithologicUnit,
+    handlers.frost,
+    handlers.nederbord,
+    handlers.solskenstid,
+    handlers.vegetation,
+    handlers.snotacke,
+    handlers.arstidstart,
+    handlers.temperatur,
+    handlers.globalstralning
+  ].map(fn => fn(request));
 
-import { errorResponse, NotFoundError } from './helpers.js';
+  const responses = await Promise.all(dataFetchers);
+  const [
+    lithologicUnit,
+    frost,
+    nederbord,
+    solskenstid,
+    vegetation,
+    snotacke,
+    arstidstart,
+    temperatur,
+    globalstralning
+  ] = await Promise.all(responses.map(r => r.json()));
+
+  const body = JSON.stringify({
+    lithologicUnit,
+    frost,
+    nederbord,
+    solskenstid,
+    vegetation,
+    snotacke,
+    arstidstart,
+    temperatur,
+    globalstralning
+  }, null, prettyPrint(request) ? 4 : undefined);
+
+  return new Response(body, {
+    status: 200,
+    headers: new Headers({
+      'content-type': 'application/json',
+      'cache-control': 'public, max-age=31536000'
+    })
+  });
+}
 
 /** @type {Map<String, Function<Promise<Response>>>} */
 const routes = new Map([
-  ['/lithologic-unit', lithologicUnit],
-  ['/frost', frost],
-  ['/nederbord', nederbord],
-  ['/solskenstid', solskenstid],
-  ['/vegetation', vegetation],
-  ['/snotacke', snotacke],
-  ['/arstidstart', arstidstart],
-  ['/temperatur', temperatur]
+  ['/lithologic-unit', handlers.lithologicUnit],
+  ['/frost', handlers.frost],
+  ['/nederbord', handlers.nederbord],
+  ['/solskenstid', handlers.solskenstid],
+  ['/vegetation', handlers.vegetation],
+  ['/snotacke', handlers.snotacke],
+  ['/arstidstart', handlers.arstidstart],
+  ['/temperatur', handlers.temperatur],
+  ['/globalstralning', handlers.globalstralning],
+  ['/full', full]
 ]);
 
 /**
@@ -48,6 +94,10 @@ async function handle(request) {
 
   try {
     response = await router(request);
+
+    if (!response.headers) {
+      response.headers = new Headers();
+    }
 
     response.headers.set('Access-Control-Allow-Origin', '*');
     response.headers.set('Access-Control-Request-Method', 'GET');

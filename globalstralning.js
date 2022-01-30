@@ -1,4 +1,4 @@
-import { getMetaData, cachedResponse, validateSearchQuery, getData, findValue, shortMonthToNum } from './helpers.js';
+import { validateSearchQuery, cachedResponse, getMetaData, getData, findValue, shortMonthToNum } from './helpers.js';
 
 /**
  * @param {Request} request
@@ -8,15 +8,15 @@ export async function handler(request) {
   const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
 
-  const wms = 'https://opendata-view.smhi.se/klim-stat_solskenstid/wms';
+  const wms = 'https://opendata-view.smhi.se/klim-stat_globalstralning/wms';
   const responses = await Promise.all([
-    'solskenstid',
-    'solskenstid_feb',
-    'solskenstid_apr',
-    'solskenstid_jun',
-    'solskenstid_aug',
-    'solskenstid_okt',
-    'solskenstid_dec'
+    'globalstralning',
+    'globalstralning_feb',
+    'globalstralning_apr',
+    'globalstralning_jun',
+    'globalstralning_aug',
+    'globalstralning_okt',
+    'globalstralning_dec'
   ].map(layer => getData([lng, lat], {
     wms,
     layers: [layer]
@@ -30,9 +30,11 @@ export async function handler(request) {
       ...acc.value,
       [i === 0 ? 'year' : '--' + shortMonthToNum(curr.legendGraphic.Legend[0].layerName.split('_')[1])]: cleanValue(findValue(curr))
     }
-  }), { unit: 'timmar', value: {} });
+  }), { unit: 'kWh/m²', value: {} });
 
-  data.metadata = await getMetaData(wms);
+  const metadata = await getMetaData(wms);
+
+  data.metadata = metadata;
 
   return cachedResponse(data, request);
 }

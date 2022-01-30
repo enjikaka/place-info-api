@@ -1,4 +1,4 @@
-import { prettyPrint, validateSearchQuery, getData, findValue, checksum, fixValueDateRange, shortMonthToNum } from './helpers.js';
+import { validateSearchQuery, getData, findValue, cachedResponse, getMetaData } from './helpers.js';
 
 async function getTempData(request, prefix) {
   const url = new URL(request.url);
@@ -36,6 +36,10 @@ async function getTempData(request, prefix) {
   return data.value;
 }
 
+/**
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
 export async function handler(request) {
   const _medelmin = getTempData(request, 'dygnsmintemp');
   const _medelmax = getTempData(request, 'dygnsmaxtemp');
@@ -45,23 +49,13 @@ export async function handler(request) {
   const medelmax = await _medelmax;
   const medeltemp = await _medeltemp;
 
-  const body = JSON.stringify({
+  const responseData = {
     medelmin,
     medelmax,
     medeltemp
-  }, null, prettyPrint(request) ? 4 : undefined);
-  const etag = await checksum(body);
+  };
 
-  if (etag === request.headers.get('if-none-match')) {
-    return new Response(null, { status: 304 });
-  }
+  responseData.metadata = await getMetaData('https://opendata-view.smhi.se/klim-stat_temperatur/wms');
 
-  return new Response(body, {
-    status: 200,
-    headers: new Headers({
-      'content-type': 'application/json',
-      'cache-control': 'public, max-age=3600, immutable',
-      'etag': etag
-    })
-  });
+  return cachedResponse(responseData, request);
 }
