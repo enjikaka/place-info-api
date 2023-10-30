@@ -22,7 +22,7 @@
  * @prop {string} crs.properties.name
  */
 
-import { parse } from 'https://deno.land/x/xml@2.0.4/mod.ts';
+import { parse } from "https://deno.land/x/xml/mod.ts";
 
 export class NotFoundError extends Error {
   constructor() {
@@ -169,10 +169,18 @@ export async function getMetaData(wms) {
   const text = await response.text();
 
   const document = parse(text);
+
   const capabilityLayer = document.WMS_Capabilities.Capability.Layer.Layer;
 
   const layer = Array.isArray(capabilityLayer) ? capabilityLayer[0] : capabilityLayer;
-  const metaDataURL = layer.MetadataURL.OnlineResource['@xlink:href'];
+  let metaDataURL = layer.MetadataURL.OnlineResource['@xlink:href'];
+
+  if (metaDataURL.includes('opendata-catalog-utv.smhi.se')) {
+    const murl = new URL(metaDataURL);
+    murl.hostname = 'opendata-catalog.smhi.se';
+    metaDataURL = murl.toString();
+  }
+
 
   const metaDataResponse = await fetch(metaDataURL);
   const metaDataText = await metaDataResponse.text();

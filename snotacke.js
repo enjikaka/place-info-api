@@ -1,12 +1,16 @@
 import { cachedResponse, validateSearchQuery, getData, findValue, getMetaData, fixValueDateRange } from './helpers.js';
 
-async function dygnMedSnotacke(request) {
+/**
+ * @param {Request} request
+ * @returns
+ */
+export async function dygnMedSnotacke(request) {
   const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
 
   const data = await getData([lng, lat], {
     wms: 'https://opendata-view.smhi.se/klim-stat_sno/dygn_med_snotacke/wms',
-    layers: ['klim-stat_sno:dygn_med_snotacke_yta']
+    layers: ['dygn_med_snotacke_yta']
   });
 
   const rawValue = findValue(data);
@@ -14,13 +18,17 @@ async function dygnMedSnotacke(request) {
   return rawValue;
 }
 
-async function forstaDagSnotacke(request) {
+/**
+ * @param {Request} request
+ * @returns
+ */
+export async function forstaDagSnotacke(request) {
   const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
 
   const data = await getData([lng, lat], {
     wms: 'https://opendata-view.smhi.se/klim-stat_sno/forsta_dag_med_snotacke/wms',
-    layers: ['klim-stat_sno:forsta_dag_med_snotacke_yta']
+    layers: ['forsta_dag_med_snotacke_yta']
   });
 
   const rawValue = findValue(data);
@@ -28,13 +36,17 @@ async function forstaDagSnotacke(request) {
   return fixValueDateRange(rawValue);
 }
 
-async function sistaDagSnotacke(request) {
+/**
+ * @param {Request} request
+ * @returns
+ */
+export async function sistaDagSnotacke(request) {
   const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
 
   const data = await getData([lng, lat], {
     wms: 'https://opendata-view.smhi.se/klim-stat_sno/sista_dag_med_sno/wms',
-    layers: ['klim-stat_sno:sista_dag_med_sno_yta']
+    layers: ['sista_dag_med_sno_yta']
   });
 
   const rawValue = findValue(data);
