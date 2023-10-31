@@ -21,19 +21,11 @@ jobs:
     needs: testing
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
     - uses: actions/download-artifact@v3
       with:
         name: lcov
-    - name: Setup LCOV
-      uses: hrishikesh-kadam/setup-lcov@v1
-    - name: Report code coverage
-      uses: zgosalvez/github-actions-report-lcov@v3
+    - uses: coverage-robot/action@v1
       with:
-        coverage-files: coverage/lcov.*.info
-        minimum-coverage: 90
-        artifact-name: code-coverage-report
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: apps/my-first-app
-        update-comment: true
+        files: |
+            ./cov_profile.lcov
+        tag: api-service
