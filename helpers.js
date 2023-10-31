@@ -206,10 +206,10 @@ export async function getWMSLayerFeatureInfo([lng, lat], { wms, layers }) {
 
   const rad = 50;
 
-  const [longNW, latNW] = offset([lng, lat], -(rad), -(rad));
-  const [longSE, latSE] = offset([lng, lat], rad, rad);
+  const [lngSW, latSW] = offset([lng, lat], -(rad), -(rad));
+  const [lngNE, latNE] = offset([lng, lat], rad, rad);
 
-  const bbox = [longNW, latNW, longSE, latSE].join(',');
+  const bbox = [lngSW, latSW, lngNE, latNE].join(',');
 
   url.searchParams.set('BBOX', bbox);
 
