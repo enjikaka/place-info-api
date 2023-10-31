@@ -1,4 +1,4 @@
-import { cachedResponse, getMetaData, validateSearchQuery, getData, findValue, fixValueDateRange } from './helpers.js';
+import { cachedResponse, getMetaData, getCoordsFromRequest, getData, findValue, fixValueDateRange } from './helpers.js';
 
 const wms = 'https://opendata-view.smhi.se/klim-stat_arstidstart/wms';
 
@@ -21,9 +21,7 @@ export async function getStartOfSeason(coords, season) {
  * @returns {Promise<Response>}
  */
 export async function handler(request) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
-  const coords = [lng, lat];
+  const coords = getCoordsFromRequest(request);
 
   const [vår, sommar, höst, vinter, metadata] = await Promise.all([
     getStartOfSeason(coords, 'var'),

@@ -1,4 +1,4 @@
-import { cachedResponse, getMetaData, validateSearchQuery, getData, findValue, shortMonthToNum } from './helpers.js';
+import { cachedResponse, getMetaData, getCoordsFromRequest, getData, findValue, shortMonthToNum } from './helpers.js';
 
 /**
  *
@@ -42,9 +42,7 @@ export async function getLastSpringFrostDate(coords) {
  * @returns {Promise<Response>}
  */
 export async function handler(request) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
-  const coords = [lng, lat];
+  const coords = getCoordsFromRequest(request);
 
   const [höstfrost, vårfrost, metadata] = await Promise.all([
     getFirstAutumnFrostDate(coords),

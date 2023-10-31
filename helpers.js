@@ -30,6 +30,17 @@ export class NotFoundError extends Error {
   }
 }
 
+/**
+ * @param {Request} request
+ * @returns {Coordinates}
+ */
+export function getCoordsFromRequest(request) {
+  const url = new URL(request.url);
+  const { lng, lat } = validateSearchQuery(url);
+
+  return [lng, lat];
+}
+
 export function geodeticToGrid(latitude, longitude) {
   const axis = 6378137.0; // GRS 80.
   const flattening = 1.0 / 298.257222101; // GRS 80.
