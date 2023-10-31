@@ -11,7 +11,7 @@ jobs:
     - uses: denoland/setup-deno@v1
       with:
         deno-version: v1.x
-    - run: make raw_test
+    - run: deno test --parallel --allow-net
 #    - uses: actions/upload-artifact@v3
 #      with:
 #        name: lcov
