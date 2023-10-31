@@ -233,9 +233,7 @@ export async function getWMSLayerFeatureInfo([lng, lat], { wms, layers }) {
   url.searchParams.set('x', x);
   url.searchParams.set('y', y);
 
-  console.log(url.toString());
-
-  const response = await fetch(url.toString());
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error('Could not fetch data');
