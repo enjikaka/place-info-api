@@ -1,40 +1,50 @@
-import { validateSearchQuery, cachedResponse, getMetaData, getData, findValue, shortMonthToNum } from './helpers.js';
+import { getCoordsFromRequest, cachedResponse, getMetaData, getData, findValue, shortMonthToNum } from './helpers.js';
+
+const wms = 'https://opendata-view.smhi.se/klim-stat_globalstralning/wms';
+
+/**
+ *
+ * @param {Coordinates} coords
+ * @param {'feb'|'apr'|'jun'|'aug'|'okt'|'dec'|'year'} period
+ */
+export async function getGlobalRadiation(coords, period) {
+  const layerName = period !== 'year' ? 'globalstralning_' + period : 'globalstralning';
+
+  const data = await getData(coords, {
+    wms,
+    layers: [layerName]
+  });
+
+  const key = period === 'year' ? 'year' : '--' + shortMonthToNum(data.legendGraphic.Legend[0].layerName.split('_')[1]);
+
+  return {
+    [key]: findValue(data)
+  };
+}
 
 /**
  * @param {Request} request
  * @returns {Promise<Response>}
  */
 export async function handler(request) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
+  const coords = getCoordsFromRequest(request);
 
-  const wms = 'https://opendata-view.smhi.se/klim-stat_globalstralning/wms';
-  const responses = await Promise.all([
-    'globalstralning',
-    'globalstralning_feb',
-    'globalstralning_apr',
-    'globalstralning_jun',
-    'globalstralning_aug',
-    'globalstralning_okt',
-    'globalstralning_dec'
-  ].map(layer => getData([lng, lat], {
-    wms,
-    layers: [layer]
-  })));
+  const [feb, apr, jun, aug, okt, dec, year, metadata] = await Promise.all([
+    getGlobalRadiation(coords, 'feb'),
+    getGlobalRadiation(coords, 'apr'),
+    getGlobalRadiation(coords, 'jun'),
+    getGlobalRadiation(coords, 'aug'),
+    getGlobalRadiation(coords, 'okt'),
+    getGlobalRadiation(coords, 'dec'),
+    getGlobalRadiation(coords, 'year'),
+    getMetaData(wms)
+  ]);
 
-  const cleanValue = v => v.includes(' ') ? v.split(' ')[0] : v;
+  const value = Object.assign(feb, apr, jun, aug, okt, dec, year);
 
-  const data = responses.reduce((acc, curr, i) => ({
-    ...acc,
-    value: {
-      ...acc.value,
-      [i === 0 ? 'year' : '--' + shortMonthToNum(curr.legendGraphic.Legend[0].layerName.split('_')[1])]: cleanValue(findValue(curr))
-    }
-  }), { unit: 'kWh/m²', value: {} });
-
-  const metadata = await getMetaData(wms);
-
-  data.metadata = metadata;
-
-  return cachedResponse(data, request);
+  return cachedResponse({
+    unit: 'kWh/m²',
+    value,
+    metadata
+  }, request);
 }
