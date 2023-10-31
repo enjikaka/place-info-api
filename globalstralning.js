@@ -1,4 +1,4 @@
-import { getCoordsFromRequest, cachedResponse, getMetaData, getData, findValue, shortMonthToNum } from './helpers.js';
+import { getCoordinates, cachedResponse, getMetaData, getData, findValue, shortMonthToNum } from './helpers.js';
 
 const wms = 'https://opendata-view.smhi.se/klim-stat_globalstralning/wms';
 
@@ -27,7 +27,7 @@ export async function getGlobalRadiation(coords, period) {
  * @returns {Promise<Response>}
  */
 export async function handler(request) {
-  const coords = getCoordsFromRequest(request);
+  const coords = getCoordinates(request);
 
   const [feb, apr, jun, aug, okt, dec, year, metadata] = await Promise.all([
     getGlobalRadiation(coords, 'feb'),

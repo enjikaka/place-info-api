@@ -1,4 +1,4 @@
-export { handler as lithologicUnit } from './lithologic-unit.js';
+export { handler as lithologicUnit } from './lithology.js';
 export { handler as frost } from './frost.js';
 export { handler as nederbord } from './nederbord.js';
 export { handler as solskenstid } from './solskenstid.js';

@@ -1,4 +1,4 @@
-import { cachedResponse, getCoordsFromRequest, getData, findValue, getMetaData, fixValueDateRange } from './helpers.js';
+import { cachedResponse, getCoordinates, getData, findValue, getMetaData, fixValueDateRange } from './helpers.js';
 
 /**
  * @param {Coordinates} coords
@@ -44,7 +44,7 @@ export async function getLastDayWithSnowCover(coords) {
  * @returns {Promise<Response>}
  */
 export async function handler(request) {
-  const coords = getCoordsFromRequest(request);
+  const coords = getCoordinates(request);
 
   const [förstaDag, sistaDag, dygn, metadata] = await Promise.all([
     getFirstDayWithSnowCover(coords),
