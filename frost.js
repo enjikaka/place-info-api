@@ -50,15 +50,17 @@ async function getVarfrost(request) {
  * @returns {Promise<Response>}
  */
 export async function handler(request) {
-  const _hostfrost = getHostfrost(request);
-  const _varfrost = getVarfrost(request);
+  const [hostfrost, varfrost, metadata] = await Promise.all([
+    getHostfrost(request),
+    getVarfrost(request),
+    getMetaData('https://opendata-view.smhi.se/klim-stat_is/sista_varfrost/wms')
+  ]);
 
-  const hostfrost = await _hostfrost;
-  const varfrost = await _varfrost;
-
-  const data = { hostfrost, varfrost };
-
-  data.metadata = await getMetaData('https://opendata-view.smhi.se/klim-stat_is/sista_varfrost/wms');
-
-  return cachedResponse(data, request);
+  return cachedResponse({
+    value: {
+      hostfrost,
+      varfrost
+    },
+    metadata
+  }, request);
 }
