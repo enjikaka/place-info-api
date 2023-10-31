@@ -305,8 +305,8 @@ export async function getWMSLayerFeatureInfo([lng, lat], { wms, layers }) {
 
 /**
  *
- * @param {Coordinates} param0
- * @param {WMSSettings} param1
+ * @param {Coordinates} coords
+ * @param {WMSSettings} settings
  * @returns
  */
 export async function getData(coords, settings) {

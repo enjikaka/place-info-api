@@ -1,5 +1,21 @@
 import { cachedResponse, getMetaData, validateSearchQuery, getData, findValue, fixValueDateRange } from './helpers.js';
 
+const wms = 'https://opendata-view.smhi.se/klim-stat_arstidstart/wms';
+
+/**
+ *
+ * @param {import('./helpers.js').Coordinates} coords
+ * @param {'vinter'|'var'|'sommar'|'host'} season
+ */
+export async function getStartOfSeason(coords, season) {
+  const data = await getData(coords, {
+    wms,
+    layers: [`klim-stat_arstidstart:arstidstart_${season}_yta`]
+  });
+
+  return fixValueDateRange(findValue(data));
+}
+
 /**
  * @param {Request} request
  * @returns {Promise<Response>}
@@ -7,28 +23,23 @@ import { cachedResponse, getMetaData, validateSearchQuery, getData, findValue, f
 export async function handler(request) {
   const url = new URL(request.url);
   const { lng, lat } = validateSearchQuery(url);
+  const coords = [lng, lat];
 
-  const wms = 'https://opendata-view.smhi.se/klim-stat_arstidstart/wms';
-  const layers = [
-    'klim-stat_arstidstart:arstidstart_vinter_yta',
-    'klim-stat_arstidstart:arstidstart_var_yta',
-    'klim-stat_arstidstart:arstidstart_sommar_yta',
-    'klim-stat_arstidstart:arstidstart_host_yta',
-  ];
-  const responses = await Promise.all(layers.map(layer => getData([lng, lat], {
-    wms,
-    layers: [layer]
-  })));
+  const [vår, sommar, höst, vinter, metadata] = await Promise.all([
+    getStartOfSeason(coords, 'var'),
+    getStartOfSeason(coords, 'sommar'),
+    getStartOfSeason(coords, 'host'),
+    getStartOfSeason(coords, 'vinter'),
+    getMetaData(wms)
+  ]);
 
-  const data = responses.reduce((acc, curr, i) => ({
-    ...acc,
+  return cachedResponse({
     value: {
-      ...acc.value,
-      [layers[i].split('klim-stat_arstidstart:arstidstart_')[1].split('_')[0]]: fixValueDateRange(findValue(curr))
-    }
-  }), { value: {} });
-
-  data.metadata = await getMetaData(wms);
-
-  return cachedResponse(data, request);
+      vår,
+      sommar,
+      höst,
+      vinter
+    },
+    metadata
+  }, request);
 }
