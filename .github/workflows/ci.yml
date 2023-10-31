@@ -12,20 +12,7 @@ jobs:
       with:
         deno-version: v1.x
     - run: make raw_test
-    - uses: actions/upload-artifact@v3
-      with:
-        name: lcov
-        path: cov_profile.lcov
-  coverage_report:
-    name: Generate coverage report
-    needs: testing
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/download-artifact@v3
-      with:
-        name: lcov
-    - uses: coverage-robot/action@v1
-      with:
-        files: |
-            ./cov_profile.lcov
-        tag: api-service
+#    - uses: actions/upload-artifact@v3
+#      with:
+#        name: lcov
+#        path: cov_profile.lcov
