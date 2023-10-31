@@ -1,57 +1,42 @@
-import { cachedResponse, validateSearchQuery, getData, findValue, getMetaData, fixValueDateRange } from './helpers.js';
+import { cachedResponse, getCoordsFromRequest, getData, findValue, getMetaData, fixValueDateRange } from './helpers.js';
 
 /**
- * @param {Request} request
+ * @param {Coordinates} coords
  * @returns
  */
-export async function dygnMedSnotacke(request) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
-
-  const data = await getData([lng, lat], {
+export async function getSnowCoverDayCount(coords) {
+  const data = await getData(coords, {
     wms: 'https://opendata-view.smhi.se/klim-stat_sno/dygn_med_snotacke/wms',
     layers: ['dygn_med_snotacke_yta']
   });
 
-  const rawValue = findValue(data);
-
-  return rawValue;
+  return findValue(data);
 }
 
 /**
- * @param {Request} request
+ * @param {Coordinates} coords
  * @returns
  */
-export async function forstaDagSnotacke(request) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
-
-  const data = await getData([lng, lat], {
+export async function getFirstDayWithSnowCover(coords) {
+  const data = await getData(coords, {
     wms: 'https://opendata-view.smhi.se/klim-stat_sno/forsta_dag_med_snotacke/wms',
     layers: ['forsta_dag_med_snotacke_yta']
   });
 
-  const rawValue = findValue(data);
-
-  return fixValueDateRange(rawValue);
+  return fixValueDateRange(findValue(data));
 }
 
 /**
- * @param {Request} request
+ * @param {Coordinates} coords
  * @returns
  */
-export async function sistaDagSnotacke(request) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
-
-  const data = await getData([lng, lat], {
+export async function getLastDayWithSnowCover(coords) {
+  const data = await getData(coords, {
     wms: 'https://opendata-view.smhi.se/klim-stat_sno/sista_dag_med_sno/wms',
     layers: ['sista_dag_med_sno_yta']
   });
 
-  const rawValue = findValue(data);
-
-  return fixValueDateRange(rawValue);
+  return fixValueDateRange(findValue(data));
 }
 
 /**
@@ -59,17 +44,17 @@ export async function sistaDagSnotacke(request) {
  * @returns {Promise<Response>}
  */
 export async function handler(request) {
-  const _forstaDag = forstaDagSnotacke(request);
-  const _sistaDag = sistaDagSnotacke(request);
-  const _dygn = dygnMedSnotacke(request);
+  const coords = getCoordsFromRequest(request);
 
-  const forstaDag = await _forstaDag;
-  const sistaDag = await _sistaDag;
-  const dygn = await _dygn;
+  const [förstaDag, sistaDag, dygn, metadata] = await Promise.all([
+    getFirstDayWithSnowCover(coords),
+    getLastDayWithSnowCover(coords),
+    getSnowCoverDayCount(coords),
+    getMetaData('https://opendata-view.smhi.se/klim-stat_sno/sista_dag_med_sno/wms')
+  ]);
 
-  const responseData = { forstaDag, sistaDag, dygn };
-
-  responseData.metadata = await getMetaData('https://opendata-view.smhi.se/klim-stat_sno/sista_dag_med_sno/wms');
-
-  return cachedResponse(responseData, request);
+  return cachedResponse({
+    value: { förstaDag, sistaDag, dygn },
+    metadata
+  }, request);
 }
