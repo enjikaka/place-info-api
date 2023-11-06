@@ -1,10 +1,14 @@
-import { validateSearchQuery, getData, findValue, cachedResponse, getMetaData } from './helpers.js';
+import { getCoordinates, getData, findValue, cachedResponse, getMetaData } from './helpers.js';
 
-async function getTempData(request, prefix) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
+const wms = 'https://opendata-view.smhi.se/klim-stat_temperatur/wms';
 
-  const wms = 'https://opendata-view.smhi.se/klim-stat_temperatur/wms';
+/**
+ *
+ * @param {Coordinates} coords
+ * @param {'dygnsmintemp'|'dygnsmaxtemp'|'medeltemp'} prefix
+ * @returns
+ */
+export async function getTempData(coords, prefix) {
   const layers = [
     'jan',
     'feb',
@@ -20,7 +24,7 @@ async function getTempData(request, prefix) {
     'dec'
   ].map(m => `${prefix}_${m}`);
 
-  const responses = await Promise.all(layers.map(layer => getData([lng, lat], {
+  const responses = await Promise.all(layers.map(layer => getData(coords, {
     wms,
     layers: [layer]
   })));
@@ -41,21 +45,24 @@ async function getTempData(request, prefix) {
  * @returns {Promise<Response>}
  */
 export async function handler(request) {
-  const _medelmin = getTempData(request, 'dygnsmintemp');
-  const _medelmax = getTempData(request, 'dygnsmaxtemp');
-  const _medeltemp = getTempData(request, 'medeltemp');
+  const coords = getCoordinates(request);
 
-  const medelmin = await _medelmin;
-  const medelmax = await _medelmax;
-  const medeltemp = await _medeltemp;
+  const [medelmin, medelmax, medeltemp, metadata] = await Promise.all([
+    getTempData(coords, 'dygnsmintemp'),
+    getTempData(coords, 'dygnsmaxtemp'),
+    getTempData(coords, 'medeltemp'),
+    getMetaData(wms)
+  ]);
 
-  const responseData = {
-    medelmin,
-    medelmax,
-    medeltemp
+  const response = {
+    value: {
+      medelmin,
+      medelmax,
+      medeltemp
+    },
+    unit: '°C',
+    metadata
   };
 
-  responseData.metadata = await getMetaData('https://opendata-view.smhi.se/klim-stat_temperatur/wms');
-
-  return cachedResponse(responseData, request);
+  return cachedResponse(response, request);
 }
