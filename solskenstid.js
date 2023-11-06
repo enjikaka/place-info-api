@@ -1,38 +1,50 @@
-import { getMetaData, cachedResponse, validateSearchQuery, getData, findValue, shortMonthToNum } from './helpers.js';
+import { getMetaData, cachedResponse, getCoordinates, cleanValue, getData, findValue, shortMonthToNum } from './helpers.js';
+
+const wms = 'https://opendata-view.smhi.se/klim-stat_solskenstid/wms';
+
+/**
+ *
+ * @param {import("./helpers.js").Coordinates} coords
+ * @param {'feb'|'apr'|'jun'|'aug'|'okt'|'dec'|'year'} period
+ */
+export async function getSunshineHours(coords, period) {
+  const layerName = period !== 'year' ? 'solskenstid_' + period : 'solskenstid';
+
+  const data = await getData(coords, {
+    wms,
+    layers: [layerName]
+  });
+
+  const key = period === 'year' ? 'year' : '--' + shortMonthToNum(data.legendGraphic.Legend[0].layerName.split('_')[1]);
+
+  return {
+    [key]: cleanValue(findValue(data))
+  };
+}
 
 /**
  * @param {Request} request
  * @returns {Promise<Response>}
  */
 export async function handler(request) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
+  const coords = getCoordinates(request);
 
-  const wms = 'https://opendata-view.smhi.se/klim-stat_solskenstid/wms';
-  const responses = await Promise.all([
-    'solskenstid',
-    'solskenstid_feb',
-    'solskenstid_apr',
-    'solskenstid_jun',
-    'solskenstid_aug',
-    'solskenstid_okt',
-    'solskenstid_dec'
-  ].map(layer => getData([lng, lat], {
-    wms,
-    layers: [layer]
-  })));
+  const [feb, apr, jun, aug, okt, dec, year, metadata] = await Promise.all([
+    getSunshineHours(coords, 'feb'),
+    getSunshineHours(coords, 'apr'),
+    getSunshineHours(coords, 'jun'),
+    getSunshineHours(coords, 'aug'),
+    getSunshineHours(coords, 'okt'),
+    getSunshineHours(coords, 'dec'),
+    getSunshineHours(coords, 'year'),
+    getMetaData(wms)
+  ]);
 
-  const cleanValue = v => v.includes(' ') ? v.split(' ')[0] : v;
+  const value = Object.assign(feb, apr, jun, aug, okt, dec, year);
 
-  const data = responses.reduce((acc, curr, i) => ({
-    ...acc,
-    value: {
-      ...acc.value,
-      [i === 0 ? 'year' : '--' + shortMonthToNum(curr.legendGraphic.Legend[0].layerName.split('_')[1])]: cleanValue(findValue(curr))
-    }
-  }), { unit: 'timmar', value: {} });
-
-  data.metadata = await getMetaData(wms);
-
-  return cachedResponse(data, request);
+  return cachedResponse({
+    unit: 'h',
+    value,
+    metadata
+  }, request);
 }

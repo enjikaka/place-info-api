@@ -30,6 +30,8 @@ export class NotFoundError extends Error {
   }
 }
 
+export const cleanValue = v => v.includes(' ') ? v.split(' ')[0] : v;
+
 /**
  * @param {Request} request
  * @returns {Coordinates}
