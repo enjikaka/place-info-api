@@ -1,15 +1,13 @@
-import { getMetaData, validateSearchQuery, getData, findValue, cachedResponse } from './helpers.js';
+import { getMetaData, getCoordinates, getData, findValue, cachedResponse } from './helpers.js';
+
+const wms = 'https://opendata-view.smhi.se/klim-stat_vegatation/vegetationsperiodens_langd/wms';
 
 /**
- * @param {Request} request
- * @returns {Promise<Response>}
+ *
+ * @param {Coordinates} coords
  */
-export async function handler(request) {
-  const url = new URL(request.url);
-  const { lng, lat } = validateSearchQuery(url);
-
-  const wms = 'https://opendata-view.smhi.se/klim-stat_vegatation/vegetationsperiodens_langd/wms';
-  const data = await getData([lng, lat], {
+export async function getVegetationPeriodLength(coords) {
+  const data = await getData(coords, {
     wms,
     layers: ['vegetationsperiodens_langd_yta']
   });
@@ -17,9 +15,22 @@ export async function handler(request) {
   const rawValue = findValue(data);
   const [value, unit] = rawValue.split(' ');
 
-  const responseData = { value, unit };
+  return [value, unit];
+}
 
-  responseData.metadata = await getMetaData(wms);
+/**
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+export async function handler(request) {
+  const coords = getCoordinates(request);
+
+  const [[value, unit], metadata] = await Promise.all([
+    getVegetationPeriodLength(coords),
+    getMetaData(wms)
+  ]);
+
+  const responseData = { value, unit, metadata };
 
   return cachedResponse(responseData, request);
 }
