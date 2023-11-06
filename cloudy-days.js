@@ -1,14 +1,14 @@
 import { cachedResponse, getMetaData, getCoordinates, getData, findValue } from './helpers.js';
 
-const wms = 'https://opendata-view.smhi.se/klim-stat_moln/klara_dagar/wms';
+const wms = 'https://opendata-view.smhi.se/klim-stat_moln/mulna_dagar/wms';
 
 /**
  * @param {import("./helpers.js").Coordinates} coords
  */
-export async function getClearDays(coords) {
+export async function getCloudyDays(coords) {
   const data = await getData(coords, {
     wms,
-    layers: ['klara_dagar']
+    layers: ['mulna_dagar']
   });
 
   const [rawValue, rawUnit] = findValue(data).split(' ');
@@ -27,7 +27,7 @@ export async function handler(request) {
   const coords = getCoordinates(request);
 
   const [clearDays, metadata] = await Promise.all([
-    getClearDays(coords),
+    getCloudyDays(coords),
     getMetaData(wms)
   ]);
 
