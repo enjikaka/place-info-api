@@ -360,8 +360,7 @@ export async function cachedResponse(data, request) {
     status: 200,
     headers: new Headers({
       'content-type': 'application/json',
-      'cache-control': 'public, max-age=3600, immutable',
-      'etag': etag
+      'cache-control': 'public, immutable'
     })
   });
 }
