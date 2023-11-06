@@ -1,27 +1,22 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { handler, getFirstAutumnFrostDate, getLastSpringFrostDate } from './frost.js';
-import type { Coordinates } from './helpers.js';
 
-const barlingshultCoords: Coordinates = [12.312287, 59.512382];
+import { coords, testRequestHandler } from './test-helpers.ts';
 
 Deno.test('getFirstAutumnFrostDate', async () => {
-  const autumnFrostDate = await getFirstAutumnFrostDate(barlingshultCoords);
+  const autumnFrostDate = await getFirstAutumnFrostDate(coords);
 
   assertEquals(autumnFrostDate, '--10-1');
 });
 
 Deno.test('getLastSpringFrostDate', async () => {
-  const springFrostDate = await getLastSpringFrostDate(barlingshultCoords);
+  const springFrostDate = await getLastSpringFrostDate(coords);
 
   assertEquals(springFrostDate, '--05-1/--05-15');
 });
 
 Deno.test('handler', async () => {
-  const url = new URL('/?lat=59.512382&lng=12.312287', 'http://localhost:8080');
-  const req = new Request(url);
-  const res = await handler(req);
-
-  const json = await res.json();
+  const json = await testRequestHandler(coords, handler);
 
   const expected = {
     value: {

@@ -1,11 +1,10 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { handler, getSunshineHours } from './solskenstid.js';
-import type { Coordinates } from './helpers.js';
 
-const barlingshultCoords: Coordinates = [12.312287, 59.512382];
+import { coords, testRequestHandler } from './test-helpers.ts';
 
 Deno.test('getSunshineHours(april)', async () => {
-  const result = await getSunshineHours(barlingshultCoords, 'apr');
+  const result = await getSunshineHours(coords, 'apr');
 
   const expected = {
     "--04": "160-180",
@@ -15,7 +14,7 @@ Deno.test('getSunshineHours(april)', async () => {
 });
 
 Deno.test('getSunshineHours(year)', async () => {
-  const result = await getSunshineHours(barlingshultCoords, 'year');
+  const result = await getSunshineHours(coords, 'year');
 
   const expected = {
     "year": "1600-1800",
@@ -25,11 +24,7 @@ Deno.test('getSunshineHours(year)', async () => {
 });
 
 Deno.test('handler', async () => {
-  const url = new URL('/?lat=59.512382&lng=12.312287', 'http://localhost:8080');
-  const req = new Request(url);
-  const res = await handler(req);
-
-  const json = await res.json();
+  const json = await testRequestHandler(coords, handler);
 
   const expected = {
     value: {

@@ -1,39 +1,34 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { getStartOfSeason, handler } from './arstidstart.js';
-import type { Coordinates } from "./helpers.js";
 
-const barlingshultCoords: Coordinates = [12.312287, 59.512382];
+import { coords, testRequestHandler } from './test-helpers.ts';
 
 Deno.test('getStartOfSeason(vinter)', async () => {
-  const vinterStart = await getStartOfSeason(barlingshultCoords, 'vinter');
+  const vinterStart = await getStartOfSeason(coords, 'vinter');
 
   assertEquals(vinterStart, '--11-01/--11-30');
 });
 
 Deno.test('getStartOfSeason(var)', async () => {
-  const vinterStart = await getStartOfSeason(barlingshultCoords, 'var');
+  const vinterStart = await getStartOfSeason(coords, 'var');
 
   assertEquals(vinterStart, '--03-01/--03-31');
 });
 
 Deno.test('getStartOfSeason(sommar)', async () => {
-  const vinterStart = await getStartOfSeason(barlingshultCoords, 'sommar');
+  const vinterStart = await getStartOfSeason(coords, 'sommar');
 
   assertEquals(vinterStart, '--05-05/--05-31');
 });
 
 Deno.test('getStartOfSeason(host)', async () => {
-  const vinterStart = await getStartOfSeason(barlingshultCoords, 'host');
+  const vinterStart = await getStartOfSeason(coords, 'host');
 
   assertEquals(vinterStart, '--09-01/--09-30');
 });
 
 Deno.test('handler', async () => {
-  const url = new URL('/?lat=59.512382&lng=12.312287', 'http://localhost:8080');
-  const req = new Request(url);
-  const res = await handler(req);
-
-  const json = await res.json();
+  const json = await testRequestHandler(coords, handler);
 
   const expected = {
     value: {

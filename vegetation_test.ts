@@ -1,22 +1,17 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { handler, getVegetationPeriodLength } from './vegetation.js';
-import type { Coordinates } from './helpers.js';
 
-const barlingshultCoords: Coordinates = [12.312287, 59.512382];
+import { coords, testRequestHandler } from './test-helpers.ts';
 
 Deno.test('getVegetationPeriodLength(dygnsmaxtemp)', async () => {
-  const [value, unit] = await getVegetationPeriodLength(barlingshultCoords);
+  const [value, unit] = await getVegetationPeriodLength(coords);
 
   assertEquals(value, '180-190');
   assertEquals(unit, 'dygn');
 });
 
 Deno.test('handler', async () => {
-  const url = new URL('/?lat=59.512382&lng=12.312287', 'http://localhost:8080');
-  const req = new Request(url);
-  const res = await handler(req);
-
-  const json = await res.json();
+  const json = await testRequestHandler(coords, handler);
 
   const expected = {
     value: '180-190',

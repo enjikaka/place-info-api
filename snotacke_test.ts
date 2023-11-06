@@ -1,34 +1,29 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { handler, getSnowCoverDayCount, getFirstDayWithSnowCover, getLastDayWithSnowCover } from './snotacke.js';
-import type { Coordinates } from "./helpers.js";
 
-const barlingshultCoords: Coordinates = [12.312287, 59.512382];
+import { coords, testRequestHandler } from './test-helpers.ts';
 
 Deno.test('getSnowCoverDayCount', async () => {
-  const result = await getSnowCoverDayCount(barlingshultCoords);
+  const result = await getSnowCoverDayCount(coords);
 
   assertEquals(result, '100-125');
 });
 
 Deno.test('getFirstDayWithSnowCover', async () => {
-  const result = await getFirstDayWithSnowCover(barlingshultCoords);
+  const result = await getFirstDayWithSnowCover(coords);
 
   assertEquals(result, '--10-01/--11-01');
 });
 
 
 Deno.test('getLastDayWithSnowCover', async () => {
-  const result = await getLastDayWithSnowCover(barlingshultCoords);
+  const result = await getLastDayWithSnowCover(coords);
 
   assertEquals(result, '--04-01/--05-01');
 });
 
 Deno.test('handler', async () => {
-  const url = new URL('/?lat=59.512382&lng=12.312287', 'http://localhost:8080');
-  const req = new Request(url);
-  const res = await handler(req);
-
-  const json = await res.json();
+  const json = await testRequestHandler(coords, handler);
 
   const expected = {
     value: {

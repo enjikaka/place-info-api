@@ -1,11 +1,10 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { handler, getTempData } from './temperatur.js';
-import type { Coordinates } from './helpers.js';
 
-const barlingshultCoords: Coordinates = [12.312287, 59.512382];
+import { coords, testRequestHandler } from './test-helpers.ts';
 
 Deno.test('getTemp(dygnsmaxtemp)', async () => {
-  const data = await getTempData(barlingshultCoords, 'dygnsmaxtemp');
+  const data = await getTempData(coords, 'dygnsmaxtemp');
 
   assertEquals(data, {
     "--1": "-2-0",
@@ -24,7 +23,7 @@ Deno.test('getTemp(dygnsmaxtemp)', async () => {
 });
 
 Deno.test('getTemp(dygnsmintemp)', async () => {
-  const data = await getTempData(barlingshultCoords, 'dygnsmintemp');
+  const data = await getTempData(coords, 'dygnsmintemp');
 
   assertEquals(data, {
     "--1": "-8--6",
@@ -43,7 +42,7 @@ Deno.test('getTemp(dygnsmintemp)', async () => {
 });
 
 Deno.test('getTemp(medeltemp)', async () => {
-  const data = await getTempData(barlingshultCoords, 'medeltemp');
+  const data = await getTempData(coords, 'medeltemp');
 
   assertEquals(data, {
     "--1": "-8--6",
@@ -62,11 +61,7 @@ Deno.test('getTemp(medeltemp)', async () => {
 });
 
 Deno.test('handler', async () => {
-  const url = new URL('/?lat=59.512382&lng=12.312287', 'http://localhost:8080');
-  const req = new Request(url);
-  const res = await handler(req);
-
-  const json = await res.json();
+  const json = await testRequestHandler(coords, handler);
 
   const expected = {
     value: {
