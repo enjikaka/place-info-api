@@ -7,3 +7,6 @@ export { handler as snotacke } from './snotacke.js';
 export { handler as arstidstart } from './arstidstart.js';
 export { handler as temperatur } from './temperatur.js';
 export { handler as globalstralning } from './globalstralning.js';
+export { handler as clearDays } from './clear-days.js';
+export { handler as cloudyDays } from './cloudy-days.js';
+export { handler as thunderDays } from './thunder-days.js';
