@@ -1,6 +1,7 @@
 import { Coordinates } from "./helpers.js";
 
 export const coords: Coordinates = [12.312287, 59.512382];
+export const coords2: Coordinates = [15.858045641247514, 59.76676701915766];
 
 /**
  *

@@ -1,18 +1,24 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { handler, getFirstAutumnFrostDate, getLastSpringFrostDate } from './frost.js';
 
-import { coords, testRequestHandler } from './test-helpers.ts';
+import { coords, coords2, testRequestHandler } from './test-helpers.ts';
 
 Deno.test('getFirstAutumnFrostDate', async () => {
   const autumnFrostDate = await getFirstAutumnFrostDate(coords);
 
-  assertEquals(autumnFrostDate, '--10-1');
+  assertEquals(autumnFrostDate, '--10-01');
 });
 
-Deno.test('getLastSpringFrostDate', async () => {
+Deno.test('getLastSpringFrostDate - coords', async () => {
   const springFrostDate = await getLastSpringFrostDate(coords);
 
-  assertEquals(springFrostDate, '--05-1/--05-15');
+  assertEquals(springFrostDate, '--05-01/--05-15');
+});
+
+Deno.test('getLastSpringFrostDate - coords2', async () => {
+  const springFrostDate = await getLastSpringFrostDate(coords2);
+
+  assertEquals(springFrostDate, '--05-15/--06-01');
 });
 
 Deno.test('handler', async () => {
@@ -20,8 +26,8 @@ Deno.test('handler', async () => {
 
   const expected = {
     value: {
-      höstfrost: "--10-1",
-      vårfrost: "--05-1/--05-15"
+      höstfrost: "--10-01",
+      vårfrost: "--05-01/--05-15"
     },
     metadata: {
       description: "<redacted>",
