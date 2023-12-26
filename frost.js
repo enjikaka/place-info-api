@@ -57,7 +57,7 @@ export async function getLastSpringFrostDate(coords) {
 export async function handler(request) {
   const coords = getCoordinates(request);
 
-  const [höstfrost, vårfrost, metadata] = await Promise.all([
+  const [första, sista, metadata] = await Promise.all([
     getFirstAutumnFrostDate(coords),
     getLastSpringFrostDate(coords),
     getMetaData('https://opendata-view.smhi.se/klim-stat_is/sista_varfrost/wms')
@@ -65,8 +65,8 @@ export async function handler(request) {
 
   return cachedResponse({
     value: {
-      höstfrost,
-      vårfrost
+      första,
+      sista
     },
     metadata
   }, request);

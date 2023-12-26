@@ -1,7 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { handler, getSunshineHours } from './solskenstid.js';
 
-import { coords, testRequestHandler } from './test-helpers.ts';
+import { coords, coords_jämtland, testRequestHandler } from './test-helpers.ts';
 
 Deno.test('getSunshineHours(april)', async () => {
   const result = await getSunshineHours(coords, 'apr');
@@ -21,6 +21,32 @@ Deno.test('getSunshineHours(year)', async () => {
   };
 
   assertEquals(result, expected);
+});
+
+Deno.test('[coords_jämtland] handler', async () => {
+  const json = await testRequestHandler(coords_jämtland, handler);
+
+  const expected = {
+    value: {
+      "--02": "60-80",
+      "--04": "160-180",
+      "--06": "220-240",
+      "--08": "180-200",
+      "--10": "60-80",
+      "--12": "1-20",
+      "year": "1400-1600"
+    },
+    unit: 'h',
+    metadata: {
+      description: "<redacted>",
+      source: "SMHI",
+      extent: { area: "Sverige", timePeriod: "1961-01-01/1990-12-31" }
+    }
+  };
+
+  assertEquals(json.unit, expected.unit);
+  assertEquals(json.value, expected.value);
+  assertEquals(json.metadata.source, expected.metadata.source);
 });
 
 Deno.test('handler', async () => {

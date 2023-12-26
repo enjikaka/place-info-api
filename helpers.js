@@ -322,7 +322,7 @@ export const shortMonthToNum = s => {
     'jun',
     'jul',
     'aug',
-    'sept',
+    'sep',
     'okt',
     'nov',
     'dec'
